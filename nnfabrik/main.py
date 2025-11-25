@@ -102,10 +102,22 @@ class Fabrikant(dj.Manual):
 
 
 @schema
+class Backend(dj.Lookup):
+    definition = """
+    backend_id : tinyint
+    ---
+    backend_name : varchar(256)
+    description : varchar(1024)
+    """
+
+    contents = [[1,"Tensorflow","Tensorflow 2.15 & Keras 3.0"],[2,"Pytorch","Pytorch 2.1"]]
+
+@schema
 class Model(dj.Manual):
     definition = """
     model_fn:                   varchar(128)   # name of the model function
     model_hash:                 varchar(64)   # hash of the model configuration
+    -> Backend
     ---
     model_config:               longblob      # model configuration to be passed into the function
     -> Fabrikant.proj(model_fabrikant='fabrikant_name')
@@ -119,6 +131,11 @@ class Model(dj.Manual):
         model_config = cleanup_numpy_scalar(model_config)
         return model_fn, model_config
 
+    @property
+    def backend(self):
+        backend = self.fetch1("backend_id")
+        return backend
+
     @staticmethod
     def resolve_fn(fn_name):
         return resolve_model(fn_name)
@@ -126,6 +143,7 @@ class Model(dj.Manual):
     def add_entry(
         self,
         model_fn,
+        backend,
         model_config,
         model_comment="",
         model_fabrikant=None,
@@ -163,6 +181,7 @@ class Model(dj.Manual):
         key = dict(
             model_fn=model_fn,
             model_hash=model_hash,
+            backend=backend,
             model_config=model_config,
             model_fabrikant=model_fabrikant,
             model_comment=model_comment,
@@ -196,6 +215,7 @@ class Model(dj.Manual):
             data_info (dict) - contains all necessary information about the input in order to build the model.
         Returns:
             A PyTorch module.
+            TODO: Should also build keras/Tensorflow model
         """
         if dataloaders is None and data_info is None:
             raise ValueError(
@@ -207,10 +227,11 @@ class Model(dj.Manual):
         if key is None:
             key = {}
         model_fn, model_config = (self & key).fn_config
-
+        backend = (self & key).backend
         return get_model(
             model_fn,
             model_config,
+            backend,
             dataloaders=dataloaders,
             seed=seed,
             data_info=data_info,

@@ -70,6 +70,7 @@ class TrainedModelChkptBase(TrainedModelBase):
     keys = [
         "model_fn",
         "model_hash",
+        "backend_id",
         "dataset_fn",
         "dataset_hash",
         "trainer_fn",

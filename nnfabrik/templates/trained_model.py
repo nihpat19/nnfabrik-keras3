@@ -115,6 +115,8 @@ class TrainedModelBase(dj.Computed):
             key = self.fetch1("KEY")
 
         model_fn, model_config = (self.model_table & key).fn_config
+        backend = (self.model_table & key).backend
+        include_state_dict = False if backend is 2 else True
         dataset_fn, dataset_config = (self.dataset_table & key).fn_config
 
         ret = dict(
@@ -130,7 +132,7 @@ class TrainedModelBase(dj.Computed):
             ret["trainer_config"] = trainer_config
 
         # if trained model exist and include_state_dict is True
-        if include_state_dict and (self.ModelStorage & key):
+        if include_state_dict and (self.ModelStorage & key) and backend==2:
             with tempfile.TemporaryDirectory() as temp_dir:
                 state_dict_path = (self.ModelStorage & key).fetch1("model_state", download_path=temp_dir)
                 ret["state_dict"] = torch.load(state_dict_path)
@@ -232,6 +234,12 @@ class TrainedModelBase(dj.Computed):
         # lookup the fabrikant corresponding to the current DJ user
         fabrikant_name = self.user_table.get_current_user()
         seed = (self.seed_table & key).fetch1("seed")
+        backend = (self.model_table & key).fetch1("backend")
+        if backend==1:
+            os.environ["KERAS_BACKEND"] = "tensorflow"
+        elif backend==2:
+            os.environ["KERAS_BACKEND"] = "torch"
+
 
         # load everything
         dataloaders, model, trainer = self.load_model(key, include_trainer=True, include_state_dict=False, seed=seed)
@@ -245,10 +253,14 @@ class TrainedModelBase(dj.Computed):
         scores, output, model_state = trainer(model=model, dataloaders=dataloaders, seed=seed, uid=key, cb=call_back)
         # save resulting model_state into a temporary file to be attached
         with tempfile.TemporaryDirectory() as temp_dir:
-            filename = make_hash(key) + ".pth.tar"
-            filepath = os.path.join(temp_dir, filename)
-            torch.save(model_state, filepath)
-
+            if os.environ["KERAS_BACKEND"]=="torch":
+                filename = make_hash(key) + ".pth.tar"
+                filepath = os.path.join(temp_dir, filename)
+                torch.save(model_state, filepath)
+            elif os.environ["KERAS_BACKEND"]=="tensorflow":
+                filename = make_hash(key) + ".keras"
+                filepath = os.path.join(temp_dir, filename)
+                model.save(filepath)
             key["scores"] = scores
             if isinstance(scores, list):
                 score = scores[0]

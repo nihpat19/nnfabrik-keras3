@@ -1,6 +1,6 @@
 from . import utility
 from functools import partial
-
+from torch import nn
 from .utility.nnf_helper import split_module_name, dynamic_import
 from .utility.nn_helpers import load_state_dict
 
@@ -39,6 +39,7 @@ resolve_trainer = partial(resolve_fn, default_base="training")
 def get_model(
     model_fn,
     model_config,
+    backend,
     dataloaders=None,
     seed=None,
     state_dict=None,
@@ -59,7 +60,8 @@ def get_model(
         strict: Controls the `strict` mode of nn.Module.load_state_dict
 
     Returns:
-        Resulting nn.Module object.
+        Resulting nn.Module, Keras.Functional, or Keras.Model object.
+
     """
 
     if isinstance(model_fn, str):
@@ -71,7 +73,7 @@ def get_model(
         else model_fn(dataloaders, data_info=data_info, seed=seed, **model_config)
     )
 
-    if state_dict is not None:
+    if state_dict is not None and backend==2:
         load_state_dict(
             net,
             state_dict,
@@ -81,6 +83,7 @@ def get_model(
             ignore_missing=model_config.get("transfer", False),
             strict=strict,
         )  # we want the most flexible loading in the case of transfer
+
 
     return net
 

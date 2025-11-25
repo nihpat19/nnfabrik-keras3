@@ -5,8 +5,8 @@ from torch import nn
 
 import numpy as np
 import random
-
-
+import tensorflow as tf
+import keras
 def get_io_dims(data_loader):
     """
     Returns the shape of the dataset for each item within an entry returned by the `data_loader`
@@ -75,6 +75,20 @@ def set_random_seed(seed: int, deterministic: bool = True):
         torch.backends.cudnn.deterministic = True
     torch.manual_seed(seed)  # this sets both CPU and CUDA seeds for PyTorch
 
+def set_random_seed_tf(seed: int, deterministic: bool = True):
+    """
+
+    Args:
+        seed:
+        deterministic:
+
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    if deterministic:
+        tf.config.experimental.enable_op_determinism()
+    tf.keras.utils.set_random_seed(seed)
+
 
 def move_to_device(model, gpu=True, multi_gpu=True):
     """
@@ -84,11 +98,14 @@ def move_to_device(model, gpu=True, multi_gpu=True):
     :param multi_gpu: (bool) if True attempt to use multi-GPU
     :return: torch.nn.Module, str
     """
-    device = "cuda" if torch.cuda.is_available() and gpu else "cpu"
-    if multi_gpu and torch.cuda.device_count() > 1:
-        print("Using ", torch.cuda.device_count(), "GPUs")
-        model = nn.DataParallel(model)
-    model = model.to(device)
+    if type(model) == torch.nn.Module:
+        device = "cuda" if torch.cuda.is_available() and gpu else "cpu"
+        if multi_gpu and torch.cuda.device_count() > 1:
+            print("Using ", torch.cuda.device_count(), "GPUs")
+            model = nn.DataParallel(model)
+        model = model.to(device)
+
+
     return model, device
 
 
@@ -123,7 +140,7 @@ def find_prefix(keys: list, p_agree: float = 0.66, separator=".") -> (list, int)
 
 def load_state_dict(
     model,
-    state_dict: dict,
+    state_dict: dict | str,
     ignore_missing: bool = False,
     ignore_unused: bool = False,
     match_names: bool = False,
