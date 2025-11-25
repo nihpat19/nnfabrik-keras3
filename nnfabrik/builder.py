@@ -39,7 +39,6 @@ resolve_trainer = partial(resolve_fn, default_base="training")
 def get_model(
     model_fn,
     model_config,
-    backend,
     dataloaders=None,
     seed=None,
     state_dict=None,
@@ -73,7 +72,7 @@ def get_model(
         else model_fn(dataloaders, data_info=data_info, seed=seed, **model_config)
     )
 
-    if state_dict is not None and backend==2:
+    if state_dict is not None and model_config['backend']==2:
         load_state_dict(
             net,
             state_dict,

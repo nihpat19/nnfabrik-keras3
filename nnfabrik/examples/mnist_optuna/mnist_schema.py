@@ -16,7 +16,7 @@ dj.config["stores"]["minio"] = {  # store in local folder
 from nnfabrik.main import my_nnfabrik
 from nnfabrik.templates.trained_model import TrainedOptunaModelBase #TrainedModelBase
 ## define nnfabrik tables here
-model_schema_name = "nnfabrik_mnist"
+model_schema_name = "nnfabrik_mnist_keras3"
 nnfabrik_module = my_nnfabrik(
     model_schema_name,
     context = None,

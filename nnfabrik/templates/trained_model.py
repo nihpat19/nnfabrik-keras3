@@ -234,7 +234,7 @@ class TrainedModelBase(dj.Computed):
         # lookup the fabrikant corresponding to the current DJ user
         fabrikant_name = self.user_table.get_current_user()
         seed = (self.seed_table & key).fetch1("seed")
-        backend = (self.model_table & key).fetch1("backend")
+        backend = (self.model_table & key).fetch1("backend_id")
         if backend==1:
             os.environ["KERAS_BACKEND"] = "tensorflow"
         elif backend==2:
