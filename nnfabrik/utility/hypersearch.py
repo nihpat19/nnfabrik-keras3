@@ -152,7 +152,10 @@ class nnfabrikOptuna:
         table_dict = dict(dataset=self.data_set_table, model=self.model_table,trainer=self.trainer_table)
         dj_table = table_dict[table_name]
         config_, hash_, cmt_ = self.make_new_config(trial, _config, _config_tune)
-        query_dict = {f'{table_name}_fn':self.fns[table_name], f'{table_name}_hash': hash_}
+        if table_name=='model':
+            query_dict = {f'{table_name}_fn':self.fns[table_name], f'{table_name}_hash': hash_,'backend_id':config_['backend_id']}
+        else:
+            query_dict = {f'{table_name}_fn':self.fns[table_name], f'{table_name}_hash': hash_}
         if not (query_dict in dj_table):
             insert_dict = {**query_dict, f'{table_name}_config':config_, \
                            f'{table_name}_fabrikant': self.architect, f'{table_name}_comment': cmt_}
