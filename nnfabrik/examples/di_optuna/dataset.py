@@ -21,9 +21,13 @@ class DeepGenerator(keras.utils.Sequence):
     """
 
     def __init__(self, generator_param):
+        super().__init__(generator_param)
         self.json_data = generator_param
         self.local_mean = 1
         self.local_std = 1
+        self.max_queue_size = 32
+        self.use_multiprocessing = True if "use_multiprocessing" in self.json_data.keys() else False
+        self.workers = 16 if not("nb_workers" in self.json_data.keys()) else self.json_data["nb_workers"]
 
     def get_input_size(self):
         """
