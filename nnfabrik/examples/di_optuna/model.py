@@ -63,4 +63,8 @@ def unet_single_1024(network_param):
     return local_network_function
 
 def di_model_function(dataloaders: Dict, seed,**config):
-    return unet_single_1024()
+    finetuning = config.get('finetuning',True)
+    if finetuning:
+        return config['model_path']
+    else:
+        return unet_single_1024({})

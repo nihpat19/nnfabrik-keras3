@@ -122,3 +122,6 @@ fabee.yml*
 .history.*
 
 examples/data/
+
+*.h5
+*.keras

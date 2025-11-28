@@ -1,10 +1,13 @@
 import os
+from typing import Dict, Callable, Tuple
+
+import keras.src.models.functional
 import numpy as np
 import tensorflow
 from keras.models import Model
 from keras.optimizers import RMSprop
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
-import loss_collection as lc
+import nnfabrik.examples.di_optuna.loss_collection as lc
 from keras.layers import Input, TFSMLayer
 import math
 import matplotlib.pylab as plt
@@ -59,7 +62,7 @@ class core_trainer:
         self.batch_size = self.local_generator.batch_size
         self.steps_per_epoch = json_data["steps_per_epoch"]
         self.loss_type = json_data["loss"]
-        self.nb_gpus = json_data["nb_gpus"]
+        self.nb_gpus = json_data.get("nb_gpus",1)
         self.period_save = json_data["period_save"]
         self.learning_rate = json_data["learning_rate"]
 
@@ -144,7 +147,7 @@ class core_trainer:
         checkpoint_path = os.path.join(
             self.checkpoints_dir,
             self.run_uid + "_" + self.model_string +
-            "-{epoch:04d}-{val_loss:.4f}.h5",
+            "-{epoch:04d}-{val_loss:.4f}.keras",
         )
         checkpoint = ModelCheckpoint(
             checkpoint_path,
@@ -254,7 +257,7 @@ class core_trainer:
                 initial_epoch=0,
             )
 
-    def finalize(self):
+    def finalize(self) -> Tuple[np.array,np.array]:
         draw_plot = True
 
         if "loss" in self.model_train.history.keys():
@@ -491,6 +494,8 @@ class transfer_trainer(core_trainer):
             plt.savefig(save_hist_path)
             plt.close(h)
 
+        return val_loss[-1], (val_loss, self.epochs), keras.saving.serialize_keras_object(self.local_model)
+
     def initialize_network(self):
         local_model_path = self.json_data['model_path']
         self.local_model = load_model(
@@ -500,5 +505,11 @@ class transfer_trainer(core_trainer):
         )
 
 
-def transfer_training():
-    return
+def di_training_function(model: keras.src.models.functional.Functional | str, dataloaders: dict, seed: int, uid: Dict, cb: Callable, **config):
+    if type(model) == str:
+        trainer = transfer_trainer(dataloaders['training_generator'],dataloaders['test_generator'],config)
+    else:
+        trainer = core_trainer(dataloaders['training_generator'],dataloaders['test_generator'],model,config)
+    trainer.run()
+    out = trainer.finalize()
+    return out
