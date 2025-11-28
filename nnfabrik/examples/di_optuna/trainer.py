@@ -320,7 +320,7 @@ class core_trainer:
 
 # This is a helper class to fix an issue in tensorflow 2.0.
 # the on_epoch_end callback from sequences is not called.
-class OnEpochEnd(tensorflow.keras.callbacks.Callback):
+class OnEpochEnd(keras.callbacks.Callback):
     def __init__(self, callbacks):
         self.callbacks = callbacks
 
