@@ -4,7 +4,7 @@ import tensorflow
 from keras.models import Model
 from keras.optimizers import RMSprop
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
-import deepinterpolation.loss_collection as lc
+import loss_collection as lc
 from keras.layers import Input, TFSMLayer
 import math
 import matplotlib.pylab as plt
@@ -500,3 +500,5 @@ class transfer_trainer(core_trainer):
         )
 
 
+def transfer_training():
+    return

@@ -1,9 +1,8 @@
+from typing import Dict
 from keras.layers import (
     Conv2D,
     MaxPooling2D,
-
     UpSampling2D,
-
 )
 from keras.layers import Concatenate
 
@@ -63,5 +62,5 @@ def unet_single_1024(network_param):
 
     return local_network_function
 
-def di_model_function(seed,**config):
+def di_model_function(dataloaders: Dict, seed,**config):
     return unet_single_1024()
