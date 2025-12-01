@@ -494,7 +494,7 @@ class transfer_trainer(core_trainer):
             plt.savefig(save_hist_path)
             plt.close(h)
 
-        return val_loss[-1], (val_loss, self.epochs), keras.saving.serialize_keras_object(self.local_model)
+        return val_loss[-1], (val_loss, self.epochs), self.local_model.get_weights()
 
     def initialize_network(self):
         local_model_path = self.json_data['model_path']
@@ -506,7 +506,7 @@ class transfer_trainer(core_trainer):
 
 
 def di_training_function(model: keras.src.models.functional.Functional | str, dataloaders: dict, seed: int, uid: Dict, cb: Callable, **config):
-    if type(model) == str:
+    if config.get("transfer"):
         trainer = transfer_trainer(dataloaders['training_generator'],dataloaders['test_generator'],config)
     else:
         trainer = core_trainer(dataloaders['training_generator'],dataloaders['test_generator'],model,config)

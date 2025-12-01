@@ -12,5 +12,11 @@ RUN pip3 install optuna
 RUN pip3 install datajoint
 RUN pip3 install gitpython scipy 
 ENV KERAS_BACKEND="tensorflow"
-WORKDIR /notebooks
+WORKDIR /workspace
+RUN git clone https://github.com/nihpat19/deepinterpolation.git .
+RUN cd ./deepinterpolation
+RUN make init
+RUN python3 setup.py install
+
+
 

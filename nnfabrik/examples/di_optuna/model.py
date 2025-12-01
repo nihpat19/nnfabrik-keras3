@@ -1,4 +1,6 @@
 from typing import Dict
+
+import keras.models
 from keras.layers import (
     Conv2D,
     MaxPooling2D,
@@ -65,6 +67,6 @@ def unet_single_1024(network_param):
 def di_model_function(dataloaders: Dict, seed,**config):
     finetuning = config.get('finetuning',True)
     if finetuning:
-        return config['model_path']
+        return keras.models.load_model(config['model_path'])
     else:
         return unet_single_1024({})
